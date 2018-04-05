@@ -44,6 +44,8 @@ export class ImageUploadComponent implements OnInit, OnChanges {
   @Output() removed: EventEmitter<FileHolder> = new EventEmitter<FileHolder>();
   @Output() uploadStateChanged: EventEmitter<boolean> = new EventEmitter<boolean>();
   @Output() uploadFinished: EventEmitter<FileHolder> = new EventEmitter<FileHolder>();
+  @Output() customUploadFinished: EventEmitter<any> = new EventEmitter();
+  @Output() customBeforeUpload: EventEmitter<any> = new EventEmitter();
 
   @ViewChild('input')
   private inputElement: ElementRef;
@@ -131,6 +133,9 @@ export class ImageUploadComponent implements OnInit, OnChanges {
   }
 
   private async uploadFiles(files: FileList, filesToUploadNum: number) {
+    this.customBeforeUpload.emit();
+
+    let count = 0;
     for (let i = 0; i < filesToUploadNum; i++) {
       const file = files[i];
 
@@ -154,9 +159,14 @@ export class ImageUploadComponent implements OnInit, OnChanges {
 
       const reader = new FileReader();
       reader.addEventListener('load', (event: any) => {
+        count++;
         const fileHolder: FileHolder = new FileHolder(event.target.result, beforeUploadResult.file);
         this.files.push(fileHolder);
         this.uploadSingleFile(fileHolder, beforeUploadResult.url, beforeUploadResult.formData);
+
+        if (filesToUploadNum == count) {
+          this.customUploadFinished.emit();
+        }
       }, false);
       reader.readAsDataURL(beforeUploadResult.file);
     }
