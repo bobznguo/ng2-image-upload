@@ -13,6 +13,11 @@ export class FileHolder {
   }
 }
 
+export class UploadViolation {
+  constructor(public maxNumber: boolean, public fileExtentions: boolean) {
+  }
+}
+
 @Component({
   selector: 'image-upload',
   templateUrl: './image-upload.component.html',
@@ -44,8 +49,9 @@ export class ImageUploadComponent implements OnInit, OnChanges {
   @Output() removed: EventEmitter<FileHolder> = new EventEmitter<FileHolder>();
   @Output() uploadStateChanged: EventEmitter<boolean> = new EventEmitter<boolean>();
   @Output() uploadFinished: EventEmitter<FileHolder> = new EventEmitter<FileHolder>();
-  @Output() customUploadFinished: EventEmitter<any> = new EventEmitter();
+  @Output() customUploadFinished: EventEmitter<FileHolder[]> = new EventEmitter<FileHolder[]>();
   @Output() customBeforeUpload: EventEmitter<any> = new EventEmitter();
+  @Output() uploadViolationCatched: EventEmitter<UploadViolation> = new EventEmitter<UploadViolation>();
 
   @ViewChild('input')
   private inputElement: ElementRef;
@@ -90,9 +96,39 @@ export class ImageUploadComponent implements OnInit, OnChanges {
       this.uploadStateChanged.emit(true);
     }
 
+    let max = false;
+    if (files.length > remainingSlots) {
+      max = true;
+    }
+
+    let ext = false;
+    let validatedFiles = Array<File>();
+    const counter = filesToUploadNum;
+    for (let i = 0; i < counter; i++) {
+      const file = files[i];
+      
+      // file extension not supported
+      if (!this.supportedExtensions.includes(file.type)) {
+        ext = true;
+        filesToUploadNum--;
+        continue;
+      }
+
+      // add file to validated file list
+      validatedFiles.push(file);
+    }
+
+    if (validatedFiles.length > 0) {
+      this.customBeforeUpload.emit();
+    }
+
+    if (max || ext) {
+      this.uploadViolationCatched.emit( new UploadViolation(max, ext));
+    }
+
     this.fileCounter += filesToUploadNum;
     this.showFileTooLargeMessage = false;
-    this.uploadFiles(files, filesToUploadNum);
+    this.uploadFiles(validatedFiles, filesToUploadNum);
   }
 
   onFileOver = (isOver) => this.fileOver = isOver;
@@ -132,9 +168,7 @@ export class ImageUploadComponent implements OnInit, OnChanges {
     }
   }
 
-  private async uploadFiles(files: FileList, filesToUploadNum: number) {
-    this.customBeforeUpload.emit();
-
+  private async uploadFiles(files: Array<File>, filesToUploadNum: number) {
     let count = 0;
     for (let i = 0; i < filesToUploadNum; i++) {
       const file = files[i];
@@ -165,7 +199,7 @@ export class ImageUploadComponent implements OnInit, OnChanges {
         this.uploadSingleFile(fileHolder, beforeUploadResult.url, beforeUploadResult.formData);
 
         if (filesToUploadNum == count) {
-          this.customUploadFinished.emit();
+          this.customUploadFinished.emit(this.files);
         }
       }, false);
       reader.readAsDataURL(beforeUploadResult.file);
