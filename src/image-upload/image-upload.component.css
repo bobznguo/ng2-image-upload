@@ -30,7 +30,7 @@
     padding-top: 14px;
 }
 
-label.img-ul-button input[type=file] {
+label.img-ul-upload-input-container input[type=file] {
     display: none;
     position: fixed;
     top: -99999px;

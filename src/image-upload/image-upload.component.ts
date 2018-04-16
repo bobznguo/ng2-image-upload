@@ -31,6 +31,7 @@ export class ImageUploadComponent implements OnInit, OnChanges {
   showFileTooLargeMessage: boolean = false;
 
   @Input() beforeUpload: (UploadMetadata) => UploadMetadata | Promise<UploadMetadata> = data => data;
+  @Input() showUploadBtn: boolean = true;
   @Input() buttonCaption: string = 'Select Images';
   @Input('class') cssClass: string = 'img-ul';
   @Input() clearButtonCaption: string = 'Clear';
@@ -52,6 +53,7 @@ export class ImageUploadComponent implements OnInit, OnChanges {
   @Output() customUploadFinished: EventEmitter<FileHolder[]> = new EventEmitter<FileHolder[]>();
   @Output() customBeforeUpload: EventEmitter<any> = new EventEmitter();
   @Output() uploadViolationCatched: EventEmitter<UploadViolation> = new EventEmitter<UploadViolation>();
+  @Output() beforeOpenFileExplorer: EventEmitter<any> = new EventEmitter<any>();
 
   @ViewChild('input')
   private inputElement: ElementRef;
@@ -65,6 +67,10 @@ export class ImageUploadComponent implements OnInit, OnChanges {
       this.fileTooLargeMessage = 'An image was too large and was not uploaded.' + (this.maxFileSize ? (' The maximum file size is ' + this.maxFileSize / 1024) + 'KiB.' : '');
     }
     this.supportedExtensions = this.supportedExtensions ? this.supportedExtensions.map((ext) => 'image/' + ext) : ['image/*'];
+  }
+
+  handleUploadClick() {
+    this.beforeOpenFileExplorer.emit();
   }
 
   deleteAll() {

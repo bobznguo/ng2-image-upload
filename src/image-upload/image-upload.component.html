@@ -8,13 +8,15 @@
      [ngStyle]="style?.layout"
 >
   <div class="img-ul-file-upload img-ul-hr-inline-group">    
-    <label class="img-ul-upload img-ul-button" [ngStyle]="style?.selectButton">
+    <label *ngIf="showUploadBtn" class="img-ul-upload img-ul-button" [ngStyle]="style?.selectButton" (click)="handleUploadClick()">
       <span [innerText]="buttonCaption"></span>
+    </label>
+    <label class="img-ul-upload-input-container">
       <input
-        type="file"
-        [accept]="supportedExtensions"
-        multiple (change)="onFileChange(input.files)"
-        #input>
+      type="file"
+      [accept]="supportedExtensions"
+      multiple (change)="onFileChange(input.files)"
+      #input>
     </label>
     <label *ngIf="fileCounter > 0" class="img-ul-clear img-ul-button" (click)="deleteAll()" [ngStyle]="style?.clearButton">
       <span [innerText]="clearButtonCaption"></span>
